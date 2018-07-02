@@ -1,0 +1,5 @@
+items.find({
+    "type":"folder",
+    "path": {"$match" : "*conan/*"},
+    "repo": "docker-prod-local"
+}).include("path")
