@@ -1,9 +1,6 @@
+include(default)
 [settings]
 arch=x86
 arch_build=x86 
-compiler=gcc
-compiler.version=7.0 
-compiler.libcxx=libstdc++ 
-build_type=Release 
 
 
