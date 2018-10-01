@@ -1,7 +1,9 @@
 properties([parameters([string(description: 'Build label', name: 'build_label', defaultValue: 'Unamed'),
                         string(description: 'Channel', name: 'channel', defaultValue: 'stable'),
-                        string(description: 'Name/Version', name: 'name_version', defaultValue: 'LIB_A/1.0'),
+                        string(description: 'Name', name: 'name', defaultValue: 'LIB_A'),
+                        string(description: 'Version', name: 'version', defaultValue: '1.0'),
                         string(description: 'Conan agent docker image name', name: 'image', defaultValue: 'conan/conangcc7'),
+                        string(description: 'Profile', name: 'profile', defaultValue: './profiles/64bits'),
                         string(description: 'Config repository branch', name: 'conf_repo_branch', defaultValue: 'master'),
                         string(description: 'Config repository url', name: 'conf_repo_url', defaultValue: 'https://github.com/jroquelaure/skynet_example.git'),
                        ])])
@@ -16,6 +18,7 @@ node {
     def conf_repo_dir
     def client
     def serverName
+    def name_version = params.name + "/" + params.version
     def serverDevName
             def server
         stage("Configure/Get repositories"){
@@ -35,14 +38,14 @@ node {
         }
         stage("Build packages"){
            
-                    client.run(command: "create ./"+data.repos[params.name_version].dir+"/. lasote/stable")
+                    client.run(command: "create ./"+data.repos[name_version].dir+"/. lasote/stable -pr \"" + conf_repo_dir + "/" + params.profile + "\"")
                 
             
         }
         
         stage("Upload Artifactory"){
             serverDevName = client.remote.add server: server, repo: "conan-dev-local"
-            String command = "upload * -r ${serverDevName} --all -c"
+            String command = "upload ${name_version}@lasote/stable -r ${serverDevName} --all -c"
             buildInfo = client.run(command: command)
             buildInfo.env.collect()
             server.publishBuildInfo buildInfo
@@ -63,7 +66,7 @@ node {
             'comment'            : 'ready for prod',
             'sourceRepo'         : 'conan-dev-local',
             'status'             : 'Released',
-            'includeDependencies': true,
+            'includeDependencies': false,
             'copy'               : false
         ]
 
